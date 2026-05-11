@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
     argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
     /* Debugging print */
-    printf("arguments.silent: %s\narguments.file: %s\narguments.pattern: %s\n", arguments.silent ? "yes" : "no", arguments.file, arguments.pattern);
+    //printf("arguments.silent: %s\narguments.file: %s\narguments.pattern: %s\n", arguments.silent ? "yes" : "no", arguments.file, arguments.pattern);
 
     if (arguments.silent != 1) {
       printf("%s: The new grep!\n", P_NAME);
