@@ -1,9 +1,63 @@
+#include <asm-generic/errno-base.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <argp.h>
+#include <error.h>
+#include <stdlib.h>
 
-char* P_NAME = "Grab";
-char* SYNTAX = "<program name> [OPTIONS] <file> <pattern>";
+// Constants for argument parsing (flags)
+const char *argp_program_version = "grep-in-c 0.0.2";
+static char doc[] = "A grep clone";
+
+/* Description of accepted arguments */
+static char args_doc[] = "";
+
+/* Options the program understands */
+static struct argp_option options[] = {
+    {"quiet", 'q', 0, OPTION_ARG_OPTIONAL, "Don't print app banner"},
+    {"file", 'f', "FILE", 0, "File to which the pattern should be applied to"},
+    {"pattern", 'p', "PATTERN", 0, "Pattern to search for in <file>"},
+    { 0 },
+};
+
+/* Used by main to communicate with parse_opt */
+struct arguments {
+    char *args[4];
+    int silent;
+    char *file;
+    char *pattern;
+};
+
+/* Parse a single argument */
+static error_t parse_opt(int key, char *arg, struct argp_state *state)
+{
+    /* Get `input` argument from argp_parse, which we know is a
+    pointer to our arguments structure. */
+    struct arguments *arguments = state->input;
+
+    switch (key) {
+        case 'q':
+            arguments->silent = 1;
+            break;
+        case 'f':
+            arguments->file = arg;
+            break;
+        case 'p':
+            arguments->pattern = arg;
+            break;
+        default:
+            return ARGP_ERR_UNKNOWN;
+    }
+    return 0;
+}
+
+/* Our argp parser */
+static struct argp argp = { options, parse_opt, args_doc, doc};
+
+// Global variables
+char* P_NAME = "GrepInC";
+char* SYNTAX = "[OPTIONS] <file> <pattern>";
 char DATA[256];
 
 // Function signatures
@@ -12,23 +66,44 @@ void compare(FILE* f, char* string);
 
 // Main
 int main(int argc, char** argv) {
-    printf("%s: The new grep!\n", P_NAME); // Introduction message. TODO: Make this disappear if -q is passed.
+
+    struct arguments arguments;
+
+    /* Default values */
+    arguments.silent = 0;
+    arguments.file = "";
+    arguments.pattern = "";
+
+    /* Parse our arguments; every option seen by parse_opt will be reflected in arguments. */
+    argp_parse(&argp, argc, argv, 0, 0, &arguments);
+
+    /* Debugging print */
+    printf("arguments.silent: %s\narguments.file: %s\narguments.pattern: %s\n", arguments.silent ? "yes" : "no", arguments.file, arguments.pattern);
+
+    if (arguments.silent != 1) {
+      printf("%s: The new grep!\n", P_NAME);
+    }
     
     if (argc < 3) {
-        printf("[ERROR]: Need 3 arguments!\n");
-        printf("Syntax: %s\n", SYNTAX);
-        return -1;
+        error(2, 0, "[ERROR]: Not enough arguments.\nSYNTAX: %s", SYNTAX);
     }
 
-    char *string = argv[2];
+    if (strcmp(arguments.file, "") == 0) {
+        error(ENOENT, ENOENT, "[ERROR]: Empty file");
+    }
+
+    if (strcmp(arguments.pattern, "") == 0) {
+        error(2, 0, "[ERROR]: No pattern supplied");
+    }
+
+    char *string = arguments.pattern;
 
     // Open the file
-    FILE *fptr = fopen(argv[1], "r");
+    FILE *fptr = fopen(arguments.file, "r");
 
 	// Check that file exists
     if (fptr == NULL) {
-      perror("[ERROR]: File does NOT exist");
-      return 2;
+      error(2, 0, "[ERROR]: %s", ENOENT);
     }
 
 	// stat structure
@@ -43,8 +118,8 @@ int main(int argc, char** argv) {
 	// 	AND
 	// 	2. The file size is smaller or equal to 0
 	if ((result == 0) && (sb.st_size <= 0)) {
-        perror("[ERROR]: File is empty!");
-		return 3;
+        fprintf(stderr, "[ERROR]: File is empty!");
+        exit(2);
     }
     
 	// Compare input string (argv[2]) to lines within the file pointer to find exact matches
