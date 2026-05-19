@@ -8,7 +8,7 @@
 #include <stdbool.h>
 
 // Constants for argument parsing (flags)
-const char *argp_program_version = "grep-in-c 0.0.2";
+const char *argp_program_version = "grep-in-c 0.0.3-alpha";
 static char doc[] = "A grep clone";
 
 /* Description of accepted arguments */
@@ -70,7 +70,7 @@ static struct argp argp = { options, parse_opt, args_doc, doc};
 // Global variables
 char* P_NAME = "GrepInC";
 char* SYNTAX = "[OPTIONS] <file> <pattern>";
-char DATA[256];
+char DATA[2048];
 
 // Function signatures
 void compare(FILE* f, char* string);
@@ -123,7 +123,7 @@ int main(int argc, char** argv) {
 
 	// Check that file exists
     if (fptr == NULL) {
-      error(ENOENT, ENOENT, "[ERROR]: ");
+      error(ENOENT, ENOENT, "[ERROR]");
     }
 
 	// stat structure
@@ -137,7 +137,7 @@ int main(int argc, char** argv) {
 	// 	1. stat() function call completed successfully
 	// 	AND
 	// 	2. The file size is smaller or equal to 0
-	if ((result == 0) && (sb.st_size <= 0)) {
+	if ((result == 0) && (sb.st_size <= (long)0)) {
         fprintf(stderr, "[ERROR]: File is empty!");
         exit(2);
     }
