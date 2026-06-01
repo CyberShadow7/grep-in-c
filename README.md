@@ -12,7 +12,7 @@ Plus, it's so much more fun writing your own code. :\)
 So, even though I might be reimplementing the wheel on some stuff, just the fact that I am not frustrated and not reaching for an LLM when things get hard makes me very happy.
 
 ***
-# Current Features
+## Current Features
 |   Feature name    |   Description | Implemented? |
 |   :---:           |   :---:       |   :---:      |
 |   full match      |   a pattern given exactly matches a line in a file  |   yes |
